@@ -50,3 +50,59 @@ export function calculateBearing(
 
   return (toDegrees(θ) + 360) % 360;
 }
+
+/**
+ * Generate Great Circle Path Points
+ */
+export function generateGreatCirclePath(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+  segments: number = 50
+): { lat: number; lng: number }[] {
+  const φ1 = toRadians(lat1);
+  const λ1 = toRadians(lon1);
+  const φ2 = toRadians(lat2);
+  const λ2 = toRadians(lon2);
+
+  const d =
+    2 *
+    Math.asin(
+      Math.sqrt(
+        Math.sin((φ2 - φ1) / 2) ** 2 +
+          Math.cos(φ1) *
+            Math.cos(φ2) *
+            Math.sin((λ2 - λ1) / 2) ** 2
+      )
+    );
+
+  const path: { lat: number; lng: number }[] = [];
+
+  for (let i = 0; i <= segments; i++) {
+    const f = i / segments;
+
+    const A = Math.sin((1 - f) * d) / Math.sin(d);
+    const B = Math.sin(f * d) / Math.sin(d);
+
+    const x =
+      A * Math.cos(φ1) * Math.cos(λ1) +
+      B * Math.cos(φ2) * Math.cos(λ2);
+
+    const y =
+      A * Math.cos(φ1) * Math.sin(λ1) +
+      B * Math.cos(φ2) * Math.sin(λ2);
+
+    const z = A * Math.sin(φ1) + B * Math.sin(φ2);
+
+    const φi = Math.atan2(z, Math.sqrt(x * x + y * y));
+    const λi = Math.atan2(y, x);
+
+    path.push({
+      lat: toDegrees(φi),
+      lng: toDegrees(λi),
+    });
+  }
+
+  return path;
+}

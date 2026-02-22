@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findAirportByCode } from "../../lib/airports";
-import { calculateDistance, calculateBearing } from "../../lib/geoCal";
+import { calculateDistance, calculateBearing, generateGreatCirclePath  } from "../../lib/geoCal";
+import { computeRelativeAngle, determineScenicSideFromTrajectory, getRecommendedSeats,getSunTimes, getSunAltitude } from "../../lib/sunCal";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -42,6 +43,14 @@ export async function GET(req: NextRequest) {
     toAirport.lng
   );
 
+  // Calculate great circle path (Interpolation points from departure to arrival)
+  const path = generateGreatCirclePath(
+    fromAirport.lat,
+    fromAirport.lng,
+    toAirport.lat,
+    toAirport.lng
+);
+
   // Assume average commercial aircraft speed = 850 km/h
   const averageSpeed = 850;
   const durationHours = distance / averageSpeed;
@@ -51,6 +60,55 @@ export async function GET(req: NextRequest) {
     departureTime.getTime() + durationHours * 60 * 60 * 1000
   );
 
+  // Sun best senic view calculation
+    const totalPoints = path.length;
+    const relativeAngles: number[] = [];
+
+    for (let i = 0; i < totalPoints; i++) {
+
+        const progress = i / (totalPoints - 1);
+
+        const currentTime = new Date(
+            departureTime.getTime() +
+            progress * durationHours * 3600 * 1000
+        );
+
+        const angle = computeRelativeAngle(
+            path[i].lat,
+            path[i].lng,
+            currentTime,
+            bearing
+        );
+
+        if (angle !== null) {
+            relativeAngles.push(angle);
+        }
+    }
+
+    const exposurePercentage = totalPoints==0 ? 0 : (relativeAngles.length / totalPoints) * 100;
+
+    const scenicSide = determineScenicSideFromTrajectory(relativeAngles);
+
+    const recommendedSeats = getRecommendedSeats(scenicSide);
+
+    const departureSunAltitude = getSunAltitude(
+        fromAirport.lat,
+        fromAirport.lng,
+        departureTime
+    );
+
+    const arrivalSunAltitude = getSunAltitude(
+        toAirport.lat,
+        toAirport.lng,
+        arrivalTime
+    );
+
+    const sunTimes = getSunTimes(
+        fromAirport.lat,
+        fromAirport.lng,
+        departureTime
+    );
+
   return NextResponse.json({
     from: fromAirport,
     to: toAirport,
@@ -59,5 +117,16 @@ export async function GET(req: NextRequest) {
     durationHours: durationHours.toFixed(2),
     departureTime,
     arrivalTime,
+    path,
+    sunData: {
+        scenicSide,
+        samples: relativeAngles.length,
+        recommendedSeats,
+        sunriseTime: sunTimes.sunrise,
+        sunsetTime: sunTimes.sunset,
+        departureSunAltitude,
+        arrivalSunAltitude,
+        exposurePercentage: Number(exposurePercentage.toFixed(1))
+    },
   });
 }
