@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Airport,
   searchAirports,
@@ -8,124 +9,130 @@ import {
 } from "../lib/airports";
 
 const FormSection = () => {
-  const [fromQuery, setFromQuery] = useState("");
-  const [toQuery, setToQuery] = useState("");
 
-  const [filteredFrom, setFilteredFrom] = useState<Airport[]>([]);
-  const [filteredTo, setFilteredTo] = useState<Airport[]>([]);
+    const router = useRouter();
 
-  const [selectedFrom, setSelectedFrom] = useState<Airport | null>(null);
-  const [selectedTo, setSelectedTo] = useState<Airport | null>(null);
+    const [fromQuery, setFromQuery] = useState("");
+    const [toQuery, setToQuery] = useState("");
 
-  const [showFromDropdown, setShowFromDropdown] = useState(false);
-  const [showToDropdown, setShowToDropdown] = useState(false);
+    const [filteredFrom, setFilteredFrom] = useState<Airport[]>([]);
+    const [filteredTo, setFilteredTo] = useState<Airport[]>([]);
 
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+    const [selectedFrom, setSelectedFrom] = useState<Airport | null>(null);
+    const [selectedTo, setSelectedTo] = useState<Airport | null>(null);
 
-  const [error, setError] = useState("");
+    const [showFromDropdown, setShowFromDropdown] = useState(false);
+    const [showToDropdown, setShowToDropdown] = useState(false);
 
-  const fromRef = useRef<HTMLDivElement>(null);
-  const toRef = useRef<HTMLDivElement>(null);
+    const [date, setDate] = useState("");
+    const [time, setTime] = useState("");
 
-  // ==========================
-  // INITIAL DATE & TIME
-  // ==========================
-  useEffect(() => {
-    const now = new Date();
+    const [error, setError] = useState("");
 
-    const today = now.toISOString().split("T")[0];
-    const currentTime = now.toTimeString().slice(0, 5);
+    const fromRef = useRef<HTMLDivElement>(null);
+    const toRef = useRef<HTMLDivElement>(null);
 
-    setDate(today);
-    setTime(currentTime);
-  }, []);
+    // ==========================
+    // INITIAL DATE & TIME
+    // ==========================
+    useEffect(() => {
+        const now = new Date();
 
-  // ==========================
-  // SEARCH LOGIC
-  // ==========================
-  useEffect(() => {
-    if (!fromQuery.trim()) {
-      setFilteredFrom(getPopularAirports().slice(0, 5));
-      return;
-    }
+        const today = now.toISOString().split("T")[0];
+        const currentTime = now.toTimeString().slice(0, 5);
 
-    const results = searchAirports(fromQuery).slice(0, 5);
-    setFilteredFrom(results);
-  }, [fromQuery]);
+        setDate(today);
+        setTime(currentTime);
+    }, []);
 
-  useEffect(() => {
-    if (!toQuery.trim()) {
-      setFilteredTo(getPopularAirports().slice(0, 5));
-      return;
-    }
+    // ==========================
+    // SEARCH LOGIC
+    // ==========================
+    useEffect(() => {
+        if (!fromQuery.trim()) {
+        setFilteredFrom(getPopularAirports().slice(0, 5));
+        return;
+        }
 
-    const results = searchAirports(toQuery).slice(0, 5);
-    setFilteredTo(results);
-  }, [toQuery]);
+        const results = searchAirports(fromQuery).slice(0, 5);
+        setFilteredFrom(results);
+    }, [fromQuery]);
 
-  // ==========================
-  // OUTSIDE CLICK CLOSE
-  // ==========================
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (fromRef.current && !fromRef.current.contains(event.target as Node)) {
+    useEffect(() => {
+        if (!toQuery.trim()) {
+        setFilteredTo(getPopularAirports().slice(0, 5));
+        return;
+        }
+
+        const results = searchAirports(toQuery).slice(0, 5);
+        setFilteredTo(results);
+    }, [toQuery]);
+
+    // ==========================
+    // OUTSIDE CLICK CLOSE
+    // ==========================
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+        if (fromRef.current && !fromRef.current.contains(event.target as Node)) {
+            setShowFromDropdown(false);
+        }
+        if (toRef.current && !toRef.current.contains(event.target as Node)) {
+            setShowToDropdown(false);
+        }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // ==========================
+    // SELECT HANDLERS
+    // ==========================
+    const handleSelectFrom = (airport: Airport) => {
+        setSelectedFrom(airport);
+        setFromQuery(`${airport.city} (${airport.code})`);
         setShowFromDropdown(false);
-      }
-      if (toRef.current && !toRef.current.contains(event.target as Node)) {
+    };
+
+    const handleSelectTo = (airport: Airport) => {
+        setSelectedTo(airport);
+        setToQuery(`${airport.city} (${airport.code})`);
         setShowToDropdown(false);
-      }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    // ==========================
+    // VALIDATION
+    // ==========================
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
 
-  // ==========================
-  // SELECT HANDLERS
-  // ==========================
-  const handleSelectFrom = (airport: Airport) => {
-    setSelectedFrom(airport);
-    setFromQuery(`${airport.city} (${airport.code})`);
-    setShowFromDropdown(false);
-  };
+        if (!selectedFrom || !selectedTo) {
+        setError("Please select valid departure and arrival airports.");
+        return;
+        }
 
-  const handleSelectTo = (airport: Airport) => {
-    setSelectedTo(airport);
-    setToQuery(`${airport.city} (${airport.code})`);
-    setShowToDropdown(false);
-  };
+        if (selectedFrom.code === selectedTo.code) {
+        setError("Departure and arrival airports cannot be the same.");
+        return;
+        }
 
-  // ==========================
-  // VALIDATION
-  // ==========================
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+        const selectedDateTime = new Date(`${date}T${time}`);
+        const now = new Date();
 
-    if (!selectedFrom || !selectedTo) {
-      setError("Please select valid departure and arrival airports.");
-      return;
-    }
+        if (selectedDateTime < now) {
+        setError("Departure date and time cannot be in the past.");
+        return;
+        }
 
-    if (selectedFrom.code === selectedTo.code) {
-      setError("Departure and arrival airports cannot be the same.");
-      return;
-    }
+        const departureDateTime = new Date(`${date}T${time}`).toISOString();
+        router.push(
+            `/visualize?from=${selectedFrom.code}&to=${selectedTo.code}&dt=${departureDateTime}`
+        );
+    };
 
-    const selectedDateTime = new Date(`${date}T${time}`);
-    const now = new Date();
-
-    if (selectedDateTime < now) {
-      setError("Departure date and time cannot be in the past.");
-      return;
-    }
-
-    alert("Validation passed. Ready to navigate.");
-  };
-
-  const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
 
   return (
     <section className="min-h-screen w-full flex flex-col items-center justify-center gap-5 px-6 font-poppins">
@@ -148,6 +155,7 @@ const FormSection = () => {
               onChange={(e) => {
                 setFromQuery(e.target.value);
                 setShowFromDropdown(true);
+                setSelectedFrom(null);
               }}
               onFocus={() => setShowFromDropdown(true)}
               className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-100"
@@ -169,12 +177,12 @@ const FormSection = () => {
                         {airport.name}, {airport.country}
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="p-3 text-gray-500 text-sm">
-                    No airport found
-                  </div>
-                )}
+                  )) ) : fromQuery.trim() && !selectedFrom ? (
+                    <div className="p-3 text-gray-500 text-sm">
+                        No airport found
+                    </div>
+                    ) : null
+                }
               </div>
             )}
           </div>
@@ -187,6 +195,7 @@ const FormSection = () => {
               value={toQuery}
               onChange={(e) => {
                 setToQuery(e.target.value);
+                setSelectedTo(null);
                 setShowToDropdown(true);
               }}
               onFocus={() => setShowToDropdown(true)}
@@ -210,11 +219,12 @@ const FormSection = () => {
                       </div>
                     </div>
                   ))
-                ) : (
-                  <div className="p-3 text-gray-500 text-sm">
-                    No airport found
-                  </div>
-                )}
+                ) : toQuery.trim() && !selectedTo ? (
+                    <div className="p-3 text-gray-500 text-sm">
+                        No airport found
+                    </div>
+                    ) : null
+                }
               </div>
             )}
           </div>
