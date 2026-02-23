@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findAirportByCode } from "../../lib/airports";
-import { calculateDistance, calculateBearing, generateGreatCirclePath  } from "../../lib/geoCal";
-import { computeRelativeAngle, determineScenicSideFromTrajectory, getRecommendedSeats,getSunTimes, getSunAltitude } from "../../lib/sunCal";
+import { calculateDistance } from "../../lib/geoCal";
+import {
+  calculateFlightSunData,
+  getRecommendedSeats,
+  generateStraightPath,
+  calculateBearing,
+} from "../../lib/sunCal";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -27,7 +32,10 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Calculate distance
+  /* ===========================
+     DISTANCE + BEARING
+  =========================== */
+
   const distance = calculateDistance(
     fromAirport.lat,
     fromAirport.lng,
@@ -35,7 +43,6 @@ export async function GET(req: NextRequest) {
     toAirport.lng
   );
 
-  // Calculate bearing
   const bearing = calculateBearing(
     fromAirport.lat,
     fromAirport.lng,
@@ -43,15 +50,6 @@ export async function GET(req: NextRequest) {
     toAirport.lng
   );
 
-  // Calculate great circle path (Interpolation points from departure to arrival)
-  const path = generateGreatCirclePath(
-    fromAirport.lat,
-    fromAirport.lng,
-    toAirport.lat,
-    toAirport.lng
-);
-
-  // Assume average commercial aircraft speed = 850 km/h
   const averageSpeed = 850;
   const durationHours = distance / averageSpeed;
 
@@ -60,73 +58,56 @@ export async function GET(req: NextRequest) {
     departureTime.getTime() + durationHours * 60 * 60 * 1000
   );
 
-  // Sun best senic view calculation
-    const totalPoints = path.length;
-    const relativeAngles: number[] = [];
+  /* ===========================
+     PATH (Straight for now)
+  =========================== */
 
-    for (let i = 0; i < totalPoints; i++) {
+  const path = generateStraightPath(
+    fromAirport.lat,
+    fromAirport.lng,
+    toAirport.lat,
+    toAirport.lng,
+    20
+  );
 
-        const progress = i / (totalPoints - 1);
+  /* ===========================
+     SUN CALCULATION
+  =========================== */
 
-        const currentTime = new Date(
-            departureTime.getTime() +
-            progress * durationHours * 3600 * 1000
-        );
+  const sunDataRaw = calculateFlightSunData(
+    fromAirport.lat,
+    fromAirport.lng,
+    toAirport.lat,
+    toAirport.lng,
+    departureTime,
+    durationHours
+  );
 
-        const angle = computeRelativeAngle(
-            path[i].lat,
-            path[i].lng,
-            currentTime,
-            bearing
-        );
+  const recommendedSeats = getRecommendedSeats(
+    sunDataRaw.scenicSide,
+    30
+  );
 
-        if (angle !== null) {
-            relativeAngles.push(angle);
-        }
-    }
-
-    const exposurePercentage = totalPoints==0 ? 0 : (relativeAngles.length / totalPoints) * 100;
-
-    const scenicSide = determineScenicSideFromTrajectory(relativeAngles);
-
-    const recommendedSeats = getRecommendedSeats(scenicSide);
-
-    const departureSunAltitude = getSunAltitude(
-        fromAirport.lat,
-        fromAirport.lng,
-        departureTime
-    );
-
-    const arrivalSunAltitude = getSunAltitude(
-        toAirport.lat,
-        toAirport.lng,
-        arrivalTime
-    );
-
-    const sunTimes = getSunTimes(
-        fromAirport.lat,
-        fromAirport.lng,
-        departureTime
-    );
+  const exposurePercentage =
+    sunDataRaw.scenicSide === "none" ? 0 : 100;
 
   return NextResponse.json({
     from: fromAirport,
     to: toAirport,
     distance: distance.toFixed(2),
-    bearing: bearing.toFixed(2),
+    bearing: bearing.toFixed(2), // ✅ added back
     durationHours: durationHours.toFixed(2),
     departureTime,
     arrivalTime,
     path,
     sunData: {
-        scenicSide,
-        samples: relativeAngles.length,
-        recommendedSeats,
-        sunriseTime: sunTimes.sunrise,
-        sunsetTime: sunTimes.sunset,
-        departureSunAltitude,
-        arrivalSunAltitude,
-        exposurePercentage: Number(exposurePercentage.toFixed(1))
+      scenicSide: sunDataRaw.scenicSide,
+      recommendedSeats,
+      sunriseTime: sunDataRaw.sunriseTime,
+      sunsetTime: sunDataRaw.sunsetTime,
+      departureSunAltitude: sunDataRaw.departureSun.altitude,
+      arrivalSunAltitude: sunDataRaw.arrivalSun.altitude,
+      exposurePercentage,
     },
   });
 }

@@ -2,6 +2,7 @@
 import React from "react";
 import HeroBackground from "./heroBackground";
 
+
 interface HeaderProps {
   onGetStarted: () => void;
   hideBackground: boolean;
@@ -27,8 +28,11 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted}) => {
               <h2 className="text-[1.5rem] mt-[5rem]">Find the perfect window seat for breathtaking sunrise and sunset views. <br />AI-calculated seating mapped to real-time solar positioning.</h2>
           </div>
 
-          <button onClick={onGetStarted} className="mt-10 flex items-center gap-2 bg-black text-white px-6 py-3 rounded-full text-lg font-medium hover:bg-gray-900 transition z-20 cursor-pointer">
-              Get Started
+          <button
+            onClick={onGetStarted}
+            className="mt-10 flex items-center gap-2 bg-black text-white px-6 py-3 rounded-full text-lg font-medium hover:bg-gray-900 transition z-20 cursor-pointer animate-float"
+          >
+            Get Started
           </button>
         </div>
 

@@ -6,6 +6,7 @@ import FlightMap from "../components/flightMap";
 import AircraftSeating from "../components/airCraftSeating";
 import SeatGuide from "../components/seatGuide";
 import ScenicInfo from "../components/scenicView";
+import FlightRouteCard from "../components/flightRouteCard";
 
 interface FlightResponse {
   from: {
@@ -99,6 +100,10 @@ export default function VisualizePage() {
         });
     }
 
+    const totalMinutes = Math.round(data?.durationHours * 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-6 relative font-poppins">
         {/* Back Button */}
@@ -111,88 +116,34 @@ export default function VisualizePage() {
             </button>
         </div>
       
-
-        {/* 2D Travel Map and Summary of flight*/}
+        {/* Flight Route Card and Flight Metrics Card*/}
         <div className="p-6 mt-2 w-full flex items-start justify-between gap-3">
-            <div className="flex flex-col items-start justify-start gap-3 p-6 bg-white/60 backdrop-blur-md border border-white/40 rounded-lg w-[40%] shadow-xl">
-                {/* Flight Summary -> { Departure: {Name, Airport_name, Date, time }. Arrival: {Name, Airport_name, Date, time }, Distance, Duration, Bearing, Best-View, Sun-riseTime, Sub-setTime }*/}
-                <h2 className="w-full text-[1.2rem] font-medium">✈️    Flight Summary</h2>
-                <div className="flex flex-col items-start justify-start gap-2 w-full p-3">
-                    <h2 className="text-[1rem] font-medium text-[#484747]">Departure</h2>
-                    <div className="ml-10 flex flex-col items-start justify-center gap-2">
-                        <p className="text-[1rem] font-medium">{data?.from?.city} <span className="text-gray-500">({data?.from?.code})</span></p>
-                        <p className="text-[1rem] font-medium">{data?.from?.name}</p>
-                        <p className="text-[1rem] font-medium">{formateDate(data?.departureTime)}</p>
+          
+            <FlightRouteCard departureCity={data?.from?.city} departureCode={data?.from?.code} departureDate={formateDate(data?.departureTime)} arrivalCity={data?.to?.city} arrivalCode={data?.to?.code} arrivalDate={formateDate(data?.arrivalTime)} duration={`${data?.durationHours} hrs`} />
+
+            <div className="w-[40%] h-[14.5rem] bg-white rounded-2xl shadow-md p-8 flex flex-col gap-8 font-poppins">
+                <h2 className="text-xl font-semibold tracking-wide">Flight Metrics</h2>
+                <div className="flex flex-col gap-4">
+                    <div className="flex justify-between">
+                        <span className="text-gray-600">Distance -</span>
+                        <span className="font-medium">{Number(data?.distance).toLocaleString("en-US", { maximumFractionDigits: 0 })} km</span>
                     </div>
-                </div>
-
-                <div className="flex flex-col items-start justify-start gap-2 w-full p-3">
-                    <h2 className="text-[1rem] font-medium text-[#484747]">Arrival</h2>
-                    <div className="ml-10 flex flex-col items-start justify-center gap-2">
-                        <p className="text-[1rem] font-medium">{data?.to?.city} <span className="text-gray-500">({data?.to?.code})</span></p>
-                        <p className="text-[1rem] font-medium">{data?.to?.name}</p>
-                        <p className="text-[1rem] font-medium">{formateDate(data?.arrivalTime)}</p>
+                    <div className="flex justify-between">
+                        <span className="text-gray-600">Duration -</span>
+                        <span className="font-medium">{hours}hr {minutes}min</span>
                     </div>
-                </div>
-
-                <div className="bg-gray-200 w-full h-1 rounded-2xl"></div>
-
-                <div className="w-full flex items-center justify-between gap-3">
-                    <div className="flex flex-col items-start justify-start gap-1">
-                        <h2 className="text-[1rem] font-medium text-black">Distance</h2>
-                        <p className="text-[1rem] text-[#484747] font-medium">{data?.distance} km</p>
+                    <div className="flex justify-between">
+                        <span className="text-gray-600">Bearing -</span>
+                        <span className="font-medium">{data?.bearing} °</span>
                     </div>
-
-                    <div className="flex flex-col items-start justify-start gap-1">
-                        <h2 className="text-[1rem] font-medium text-black">Duration</h2>
-                        <p className="text-[1rem] text-[#484747] font-medium">{data?.durationHours} hrs</p>
-                    </div>
-
-                    <div className="flex flex-col items-start justify-start gap-1">
-                        <h2 className="text-[1rem] font-medium text-black">Bearing</h2>
-                        <p className="text-[1rem] text-[#484747] font-medium">{data?.bearing}°</p>
-                    </div>
-
                 </div>
             </div>
-            <div className="flex flex-col items-start justify-start w-[50%] h-[500px] gap-3">
-                <h2 className="text-[1.2rem] font-medium">Flight Path</h2>
-                <div className="w-full flex items-center justify-start gap-10">
-
-                    <div className="flex items-center gap-2">
-                        <span className="w-4 h-4 bg-green-500 rounded-full inline-block"></span>
-                        <h2 className="text-[1rem] font-medium">Departure</h2>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <span className="w-4 h-4 bg-red-500 rounded-full inline-block"></span>
-                        <h2 className="text-[1rem] font-medium">Arrival</h2>
-                    </div>
-
-                </div>
-                
-                
-                {data && (
-                    <FlightMap
-                    from={{
-                        lat: data.from.lat,
-                        lng: data.from.lng,
-                        city: data.from.city,
-                    }}
-                    to={{
-                        lat: data.to.lat,
-                        lng: data.to.lng,
-                        city: data.to.city,
-                    }}
-                    path={data.path}
-                    />
-                )}
-            </div>
+            
         </div>
 
         {/* Aircraft Seating Layout with recommended seats */}
         <div className="w-full flex items-start justify-between gap-6 p-6">
-            <div>
+            <div className="w-[80%]">
                 {data && (
                     <div className="mt-10 w-full">
                         <AircraftSeating
@@ -203,19 +154,56 @@ export default function VisualizePage() {
                     </div>
                 )}
             </div>
-            <div className="flex flex-col items-start justify-cemter gap-4 p-2 mt-[2rem] w-[50%]">
-                <div>
-                    <SeatGuide scenicSide={data.sunData.scenicSide as any} />
+
+            <div className="w-[80%] flex flex-col items-center justify-center gap-5 mt-[2.3rem] ">
+                <div className="flex flex-col items-start justify-start w-[100%] h-[500px] gap-3 bg-white rounded-2xl shadow-md p-8 flex flex-col font-poppins">
+                    <h2 className="text-[1.2rem] font-medium">Flight Path</h2>
+                    <div className="w-full flex items-center justify-start gap-10">
+
+                        <div className="flex items-center gap-2">
+                            <span className="w-4 h-4 bg-green-500 rounded-full inline-block"></span>
+                            <h2 className="text-[1rem] font-medium">Departure</h2>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <span className="w-4 h-4 bg-red-500 rounded-full inline-block"></span>
+                            <h2 className="text-[1rem] font-medium">Arrival</h2>
+                        </div>
+
+                    </div>
+                
+                
+                    {data && (
+                        <FlightMap
+                        from={{
+                            lat: data.from.lat,
+                            lng: data.from.lng,
+                            city: data.from.city,
+                        }}
+                        to={{
+                            lat: data.to.lat,
+                            lng: data.to.lng,
+                            city: data.to.city,
+                        }}
+                        path={data.path}
+                        />
+                    )}
                 </div>
-                <div>
-                    <ScenicInfo
-                        scenicSide={data.sunData.scenicSide as any}
-                        exposurePercentage={data.sunData.exposurePercentage}
-                        sunriseTime={data.sunData.sunriseTime}
-                        sunsetTime={data.sunData.sunsetTime}
-                    />
-                </div>
+
+                
+                <ScenicInfo
+                    scenicSide={data.sunData.scenicSide as any}
+                    exposurePercentage={data.sunData.exposurePercentage}
+                    sunriseTime={data.sunData.sunriseTime}
+                    sunsetTime={data.sunData.sunsetTime}
+                />
+
+                <SeatGuide scenicSide={data.sunData.scenicSide as any} />
+                
+
             </div>
+
+            
             
         </div>
 

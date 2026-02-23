@@ -12,10 +12,12 @@ export default function SeatGuide({ scenicSide }: SeatGuideProps) {
       ? "F"
       : scenicSide === "both"
       ? "A / F"
+      : scenicSide === "none"
+      ? "A / F"
       : "-";
 
   return (
-    <div className="w-[350px] bg-white border border-gray-200 rounded-2xl shadow-md p-6">
+    <div className="w-[100%] bg-white border border-gray-200 rounded-2xl shadow-md p-6">
       <h2 className="text-lg font-semibold text-blue-600 mb-1">
         Seat Guide
       </h2>
@@ -31,7 +33,7 @@ export default function SeatGuide({ scenicSide }: SeatGuideProps) {
         <p className="text-sm text-gray-500 mb-3">
           Best window seats for sunrise/sunset views
         </p>
-        <div className="w-10 h-10 bg-yellow-400 rounded-md flex items-center justify-center font-bold text-black shadow">
+        <div className="w-[4rem] h-10 bg-yellow-400 rounded-md flex items-center justify-center font-bold text-black shadow">
           {recommendedLetter}
         </div>
       </div>
