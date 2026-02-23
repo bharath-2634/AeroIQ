@@ -5,7 +5,6 @@ import HeroBackground from "./heroBackground";
 
 interface HeaderProps {
   onGetStarted: () => void;
-  hideBackground: boolean;
 }
 
 
