@@ -130,7 +130,7 @@ export default function VisualizePage() {
           
             <FlightRouteCard departureCity={data?.from?.city?? ""} departureCode={data?.from?.code?? ""} departureDate={formateDate(data?.departureTime)} arrivalCity={data?.to?.city?? ""} arrivalCode={data?.to?.code??""} arrivalDate={formateDate(data?.arrivalTime)} duration={`${data?.durationHours} hrs`} />
 
-            <div className="w-[40%] h-[14.5rem] bg-white rounded-2xl shadow-md p-8 flex flex-col gap-8 font-poppins">
+            <div className="w-[40%] h-58 bg-white rounded-2xl shadow-md p-8 flex flex-col gap-8 font-poppins">
                 <h2 className="text-xl font-semibold tracking-wide">Flight Metrics</h2>
                 <div className="flex flex-col gap-4">
                     <div className="flex justify-between">
@@ -166,7 +166,7 @@ export default function VisualizePage() {
 
             <div className="w-[80%] flex flex-col items-center justify-center gap-5 mt-[2.3rem] ">
 
-                <div className="flex flex-col items-start justify-start w-[100%] h-[500px] gap-3 bg-white rounded-2xl shadow-md p-8 flex flex-col font-poppins">
+                <div className="flex flex-col items-start justify-start w-full h-125 gap-3 bg-white rounded-2xl shadow-md p-8 font-poppins">
                     <h2 className="text-[1.2rem] font-medium">Flight Path</h2>
                     <div className="w-full flex items-center justify-start gap-10">
 

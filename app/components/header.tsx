@@ -24,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted}) => {
           </div>
 
           <div className="w-[80%]">
-              <h2 className="text-[1.5rem] mt-[5rem]">Discover the ideal window seat for stunning sunrise and sunset views. <br />Our advanced system analyzes real-time sun positions and flight paths to choose the optimal side of the aircraft.</h2>
+              <h2 className="text-[1.5rem] mt-20">Discover the ideal window seat for stunning sunrise and sunset views. <br />Our advanced system analyzes real-time sun positions and flight paths to choose the optimal side of the aircraft.</h2>
           </div>
 
           <button
