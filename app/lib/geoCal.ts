@@ -54,6 +54,7 @@ export function calculateBearing(
 /**
  * Generate Great Circle Path Points
  */
+/*
 export function generateGreatCirclePath(
   lat1: number,
   lon1: number,
@@ -101,6 +102,68 @@ export function generateGreatCirclePath(
     path.push({
       lat: toDegrees(φi),
       lng: toDegrees(λi),
+    });
+  }
+
+  return path;
+}
+*/
+
+export function generateGreatCirclePath(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+  segments: number = 50,
+  type: "shortest" | "longest" = "shortest"
+): { lat: number; lng: number }[] {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const toDeg = (rad: number) => (rad * 180) / Math.PI;
+
+  const φ1 = toRad(lat1);
+  const λ1 = toRad(lon1);
+  const φ2 = toRad(lat2);
+  const λ2 = toRad(lon2);
+
+  let Δ = 2 * Math.asin(
+    Math.sqrt(
+      Math.sin((φ2 - φ1) / 2) ** 2 +
+      Math.cos(φ1) *
+        Math.cos(φ2) *
+        Math.sin((λ2 - λ1) / 2) ** 2
+    )
+  );
+
+  if (type === "longest") {
+    Δ = 2 * Math.PI - Δ;
+  }
+
+  const path: { lat: number; lng: number }[] = [];
+
+  for (let i = 0; i <= segments; i++) {
+    const f = i / segments;
+
+    const A = Math.sin((1 - f) * Δ) / Math.sin(Δ);
+    const B = Math.sin(f * Δ) / Math.sin(Δ);
+
+    const x =
+      A * Math.cos(φ1) * Math.cos(λ1) +
+      B * Math.cos(φ2) * Math.cos(λ2);
+
+    const y =
+      A * Math.cos(φ1) * Math.sin(λ1) +
+      B * Math.cos(φ2) * Math.sin(λ2);
+
+    const z =
+      A * Math.sin(φ1) +
+      B * Math.sin(φ2);
+
+    const φi = Math.atan2(z, Math.sqrt(x * x + y * y));
+    const λi = Math.atan2(y, x);
+
+    path.push({
+      lat: toDeg(φi),
+      lng: toDeg(λi),
     });
   }
 

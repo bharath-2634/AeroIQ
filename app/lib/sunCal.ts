@@ -275,3 +275,48 @@ export function getRecommendedSeats(
 
   return seats;
 }
+
+
+export function getScenicSideAtTime(
+  lat: number,
+  lng: number,
+  time: Date,
+  bearing: number
+): "left" | "right" | "none" {
+
+  const pos = SunCalc.getPosition(time, lat, lng);
+
+  if (pos.altitude <= 0) return "none";
+
+  const azimuth = ((pos.azimuth * 180) / Math.PI + 180) % 360;
+
+  let diff = azimuth - bearing;
+  diff = ((diff + 540) % 360) - 180;
+
+  if (Math.abs(diff) < 10) return "none";
+
+  return diff > 0 ? "right" : "left";
+}
+
+export function determineFlightViewMode(
+  departureTime: Date,
+  arrivalTime: Date,
+  sunriseTime: Date | null,
+  sunsetTime: Date | null
+): "sunrise-only" | "sunset-only" | "both" | "none" {
+
+  const hasSunrise =
+    sunriseTime &&
+    sunriseTime >= departureTime &&
+    sunriseTime <= arrivalTime;
+
+  const hasSunset =
+    sunsetTime &&
+    sunsetTime >= departureTime &&
+    sunsetTime <= arrivalTime;
+
+  if (hasSunrise && hasSunset) return "both";
+  if (hasSunrise) return "sunrise-only";
+  if (hasSunset) return "sunset-only";
+  return "none";
+}

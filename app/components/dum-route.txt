@@ -6,6 +6,8 @@ import {
   getRecommendedSeats,
   generateStraightPath,
   calculateBearing,
+  determineFlightViewMode,
+  getScenicSideAtTime,
 } from "../../lib/sunCal";
 
 export async function GET(req: NextRequest) {
@@ -62,13 +64,12 @@ export async function GET(req: NextRequest) {
      PATH (Straight for now)
   =========================== */
 
-  const path = generateGreatCirclePath(
+  const path = generateStraightPath(
     fromAirport.lat,
     fromAirport.lng,
     toAirport.lat,
     toAirport.lng,
-    50,
-    "shortest"
+    20,
   );
 
   /* ===========================
@@ -84,13 +85,64 @@ export async function GET(req: NextRequest) {
     durationHours
   );
 
+  const sunriseTime = sunDataRaw.sunriseTime;
+  const sunsetTime = sunDataRaw.sunsetTime;
+
+  const viewMode = determineFlightViewMode(
+    departureTime,
+    arrivalTime,
+    sunriseTime,
+    sunsetTime
+  );
+
+  let sunriseSide: "left" | "right" | "none" = "none";
+  let sunsetSide: "left" | "right" | "none" = "none";
+
+  if (sunriseTime) {
+    sunriseSide = getScenicSideAtTime(
+      fromAirport.lat,
+      fromAirport.lng,
+      sunriseTime,
+      bearing
+    );
+  }
+
+  if (sunsetTime) {
+    sunsetSide = getScenicSideAtTime(
+      toAirport.lat,
+      toAirport.lng,
+      sunsetTime,
+      bearing
+    );
+  }
+
+  
+  let finalScenicSide: "left" | "right" | "both" | "none";
+
+  if (viewMode === "none") {
+    finalScenicSide = "none";
+  }
+  else if (viewMode === "sunrise-only") {
+    finalScenicSide = sunriseSide;
+  }
+  else if (viewMode === "sunset-only") {
+    finalScenicSide = sunsetSide;
+  }
+  else {
+    if (sunriseSide === sunsetSide) {
+      finalScenicSide = sunriseSide;
+    } else {
+      finalScenicSide = "both";
+    }
+  }
+
   const recommendedSeats = getRecommendedSeats(
-    sunDataRaw.scenicSide,
+    finalScenicSide,
     30
   );
 
   const exposurePercentage =
-    sunDataRaw.scenicSide === "none" ? 0 : 100;
+    finalScenicSide === "none" ? 0 : 100;
 
   return NextResponse.json({
     from: fromAirport,
@@ -102,7 +154,8 @@ export async function GET(req: NextRequest) {
     arrivalTime,
     path,
     sunData: {
-      scenicSide: sunDataRaw.scenicSide,
+      scenicSide: finalScenicSide,
+      viewMode,
       recommendedSeats,
       sunriseTime: sunDataRaw.sunriseTime,
       sunsetTime: sunDataRaw.sunsetTime,

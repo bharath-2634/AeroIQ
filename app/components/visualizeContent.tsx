@@ -9,6 +9,7 @@ import AircraftSeating from "../components/airCraftSeating";
 import SeatGuide from "../components/seatGuide";
 import ScenicInfo from "../components/scenicView";
 import FlightRouteCard from "../components/flightRouteCard";
+import FlightMap3D from "./flight3DMap";
 
 const FlightMap = dynamic(() => import("../components/flightMap"), {
   ssr: false,
@@ -164,6 +165,7 @@ export default function VisualizePage() {
             </div>
 
             <div className="w-[80%] flex flex-col items-center justify-center gap-5 mt-[2.3rem] ">
+
                 <div className="flex flex-col items-start justify-start w-[100%] h-[500px] gap-3 bg-white rounded-2xl shadow-md p-8 flex flex-col font-poppins">
                     <h2 className="text-[1.2rem] font-medium">Flight Path</h2>
                     <div className="w-full flex items-center justify-start gap-10">
