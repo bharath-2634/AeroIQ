@@ -1,12 +1,13 @@
-// "use client";
+"use client";
 
+import { useEffect, useState } from "react";
 import {
   MapContainer,
   TileLayer,
   Polyline,
   Popup,
   CircleMarker,
-  } from "react-leaflet";
+} from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -14,9 +15,10 @@ interface FlightMapProps {
   from: { lat: number; lng: number; city: string };
   to: { lat: number; lng: number; city: string };
   path: { lat: number; lng: number }[];
+  sunTrack?: { lat: number; lng: number; altitude: number }[];
 }
 
-export default function MapInner({ from, to, path }: FlightMapProps) {
+export default function MapInner({ from, to, path, sunTrack }: FlightMapProps) {
   // Prefer the path from the API (can be curved); fall back to straight line
   const positions: [number, number][] =
     path && path.length > 1
@@ -27,6 +29,23 @@ export default function MapInner({ from, to, path }: FlightMapProps) {
         ];
 
   const bounds = L.latLngBounds(positions);
+
+  const [sunIndex, setSunIndex] = useState<number>(0);
+
+  useEffect(() => {
+    if (!sunTrack || sunTrack.length === 0) return;
+
+    setSunIndex(0);
+
+    const id = setInterval(() => {
+      setSunIndex((prev) => (prev + 1) % sunTrack.length);
+    }, 800);
+
+    return () => clearInterval(id);
+  }, [sunTrack]);
+
+  const currentSun =
+    sunTrack && sunTrack.length > 0 ? sunTrack[sunIndex] : null;
 
   return (
     <div className="w-full h-[400px] rounded-2xl overflow-hidden shadow-lg bg-[#e6f3ff]">
@@ -64,6 +83,18 @@ export default function MapInner({ from, to, path }: FlightMapProps) {
         >
           <Popup>{to.city} (Arrival)</Popup>
         </CircleMarker>
+
+        {currentSun && (
+          <CircleMarker
+            center={[currentSun.lat, currentSun.lng]}
+            radius={6}
+            pathOptions={{
+              color: "#facc15",
+              fillColor: "#facc15",
+              fillOpacity: 0.9,
+            }}
+          />
+        )}
       </MapContainer>
     </div>
   );

@@ -80,27 +80,17 @@ export async function GET(req: NextRequest) {
   );
 
   /* ===========================
-     PATH: straight line OR curved (Bézier)
+     PATH: straight line 
   =========================== */
 
-  const pathStyle = pathStyleParam === "curved" ? "curved" : "straight";
-
-  // const path = generateStraightLinePath(
-  //         fromAirport.lat,
-  //         fromAirport.lng,
-  //         toAirport.lat,
-  //         toAirport.lng
-  //       );
+  const path = generateStraightLinePath(
+          fromAirport.lat,
+          fromAirport.lng,
+          toAirport.lat,
+          toAirport.lng
+        );
       
 
-  const path = generateCurvedBezierPath(
-    fromAirport.lat,
-    fromAirport.lng,
-    toAirport.lat,
-    toAirport.lng,
-    50,
-    0.3
-  );
 
   /* ===========================
      SUN CALCULATION
@@ -140,6 +130,7 @@ export async function GET(req: NextRequest) {
       departureSunAltitude: sunDataRaw.departureSun.altitude,
       arrivalSunAltitude: sunDataRaw.arrivalSun.altitude,
       exposurePercentage,
+      timeline: sunDataRaw.timeline,
     },
   });
 }

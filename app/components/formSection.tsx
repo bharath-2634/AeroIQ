@@ -7,6 +7,7 @@ import {
   searchAirports,
   getPopularAirports,
 } from "../lib/airports";
+import loading_gif from "../assets/air_craft_loading.gif";
 
 const FormSection = () => {
 
@@ -28,6 +29,7 @@ const FormSection = () => {
     const [time, setTime] = useState("");
 
     const [error, setError] = useState("");
+    const [showLoading, setShowLoading] = useState(false);
 
     const fromRef = useRef<HTMLDivElement>(null);
     const toRef = useRef<HTMLDivElement>(null);
@@ -127,15 +129,20 @@ const FormSection = () => {
         }
 
         const departureDateTime = new Date(`${date}T${time}`).toISOString();
-        router.push(
-            `/visualize?from=${selectedFrom.code}&to=${selectedTo.code}&dt=${departureDateTime}`
-        );
+
+        setShowLoading(true);
+
+        setTimeout(() => {
+            router.push(
+                `/visualize?from=${selectedFrom.code}&to=${selectedTo.code}&dt=${departureDateTime}`
+            );
+        }, 2000);
     };
 
     const today = new Date().toISOString().split("T")[0];
 
   return (
-    <section className="min-h-screen w-full flex flex-col items-center justify-center gap-5 px-6 font-poppins">
+    <section className="min-h-screen w-full flex flex-col items-center justify-center gap-5 px-6 font-poppins relative">
       <div className="flex flex-col items-center justify-center gap-3 mb-5">
         <h2 className="text-[1.5rem] font-medium">Flight Details</h2>
         <p className="text-[1rem] text-[#878787]">
@@ -252,12 +259,32 @@ const FormSection = () => {
 
           <button
             type="submit"
-            className="mt-4 bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-900 transition"
+            className="mt-4 bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-900 transition disabled:opacity-60"
+            disabled={showLoading}
           >
             Analyze Scenic View
           </button>
         </form>
       </div>
+
+      {showLoading && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/25 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-6 px-6">
+            <div className="relative w-[20rem] h-24 flex items-center justify-center">
+              <div className="absolute inset-x-4 top-8 h-8 blur-2xl rounded-full" />
+              <div className="relative z-10 flex items-center gap-2 px-6 py-3 animate-plane-fly">
+                <img src={loading_gif.src} alt="loading" className="" />
+              </div>
+            </div>
+            <div className="w-64 h-1.5 rounded-full overflow-hidden shadow-inner">
+              <div className="h-full w-1/2 rounded-full bg-sky-500 animate-pulse" />
+            </div>
+            <p className="text-sm font-medium text-black">
+              Analyzing your scenic view...
+            </p>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

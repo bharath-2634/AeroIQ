@@ -9,12 +9,21 @@ export interface SunPosition {
   altitude: number; // degrees
 }
 
+export interface SunTimelinePoint {
+  lat: number;
+  lng: number;
+  time: Date;
+  sun: SunPosition;
+  bearing: number;
+}
+
 export interface FlightSunData {
   departureSun: SunPosition;
   arrivalSun: SunPosition;
   scenicSide: "left" | "right" | "both" | "none";
   sunriseTime: Date | null;
   sunsetTime: Date | null;
+  timeline: SunTimelinePoint[];
 }
 
 /* ================================
@@ -191,6 +200,7 @@ export function calculateFlightSunData(
     20
   );
 
+  const timeline: SunTimelinePoint[] = [];
   const visibleSunPositions: {
     azimuth: number;
     altitude: number;
@@ -216,6 +226,14 @@ export function calculateFlightSunData(
       next.lng
     );
 
+    timeline.push({
+      lat: current.lat,
+      lng: current.lng,
+      time: currentTime,
+      sun: sunPos,
+      bearing,
+    });
+
     // twilight threshold (like senior)
     if (sunPos.altitude > -6) {
       visibleSunPositions.push({
@@ -233,6 +251,7 @@ export function calculateFlightSunData(
       scenicSide: "none",
       sunriseTime: sunrise,
       sunsetTime: sunset,
+      timeline,
     };
   }
 
@@ -249,6 +268,7 @@ export function calculateFlightSunData(
     scenicSide,
     sunriseTime: sunrise,
     sunsetTime: sunset,
+    timeline,
   };
 }
 

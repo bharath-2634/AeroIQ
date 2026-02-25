@@ -43,3 +43,20 @@ body {
   will-change: transform;
   display: inline-block;
 }
+
+@keyframes plane-fly {
+  0% {
+    transform: translateX(-12px) translateY(0px);
+  }
+  50% {
+    transform: translateX(12px) translateY(-6px);
+  }
+  100% {
+    transform: translateX(-12px) translateY(0px);
+  }
+}
+
+.animate-plane-fly {
+  animation: plane-fly 1.8s ease-in-out infinite;
+  will-change: transform;
+}

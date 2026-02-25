@@ -9,6 +9,7 @@ import AircraftSeating from "../components/airCraftSeating";
 import SeatGuide from "../components/seatGuide";
 import ScenicInfo from "../components/scenicView";
 import FlightRouteCard from "../components/flightRouteCard";
+import ExposureTimelineGraph from "../components/ExposureTimelineGraph";
 import FlightMap3D from "./flight3DMap";
 
 const FlightMap = dynamic(() => import("../components/flightMap"), {
@@ -42,6 +43,13 @@ interface FlightResponse {
     exposurePercentage: number;
     sunriseTime: string;
     sunsetTime: string;
+    timeline: {
+      lat: number;
+      lng: number;
+      time: string;
+      sun: { azimuth: number; altitude: number };
+      bearing: number;
+    }[];
   };
 }
 
@@ -112,6 +120,16 @@ export default function VisualizePage() {
     const totalMinutes = Math.round(Number(data?.durationHours ?? 0) * 60);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
+
+  const sunTrack =
+    data?.sunData.timeline
+      // Only keep points where the sun is actually above the horizon
+      ?.filter((p) => p.sun.altitude > 0)
+      .map((p) => ({
+        lat: p.lat,
+        lng: p.lng,
+        altitude: p.sun.altitude,
+      })) ?? [];
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-6 relative font-poppins">
@@ -196,9 +214,12 @@ export default function VisualizePage() {
                             city: data.to.city,
                         }}
                         path={data.path}
+                        sunTrack={sunTrack}
                         />
                     )}
                 </div>
+
+                <ExposureTimelineGraph timeline={data?.sunData.timeline ?? []} />
 
                 
                 {data && (
@@ -221,6 +242,9 @@ export default function VisualizePage() {
             
         </div>
 
+        <div className="w-[50%] p-6 flex items-center justify-between">
+          
+        </div>
 
     </div>
   );
