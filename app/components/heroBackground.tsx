@@ -61,7 +61,7 @@ function BorderParticles() {
         size={0.05}
         sizeAttenuation
         transparent
-        opacity={0.6}
+        opacity={0.5}
       />
     </points>
   );
