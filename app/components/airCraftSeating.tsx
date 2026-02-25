@@ -83,7 +83,7 @@ export default function AircraftSeating({
   };
 
   return (
-    <div className="p-6 bg-white rounded-2xl shadow-lg border border-gray-200 w-full">
+    <div className="p-6 bg-white rounded-2xl shadow-lg border border-gray-200 w-full text-center">
       <h2 className="text-lg font-semibold mb-2">Aircraft Seating</h2>
       <p className="text-sm text-gray-500 mb-4">
         Top-view cabin layout (compact)

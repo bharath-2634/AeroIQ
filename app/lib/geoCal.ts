@@ -2,7 +2,8 @@ const toRadians = (deg: number) => (deg * Math.PI) / 180;
 const toDegrees = (rad: number) => (rad * 180) / Math.PI;
 
 /**
- * Haversine Distance (km)
+ * Haversine Distance (km) - always returns the shortest great-circle distance
+ * between two points on the sphere.
  */
 export function calculateDistance(
   lat1: number,
@@ -25,6 +26,22 @@ export function calculateDistance(
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return R * c;
+}
+
+/**
+ * Longest great-circle distance (km) between two points.
+ * This is the complementary arc to the shortest distance around the globe.
+ */
+export function calculateLongestDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371; // Earth radius in km
+  const shortest = calculateDistance(lat1, lon1, lat2, lon2);
+  const circumference = 2 * Math.PI * R;
+  return circumference - shortest;
 }
 
 /**
@@ -165,6 +182,79 @@ export function generateGreatCirclePath(
       lat: toDeg(φi),
       lng: toDeg(λi),
     });
+  }
+
+  return path;
+}
+
+/**
+ * Generate a straight line path between two points (departure and arrival only).
+ * Use this when you want the map to show a single straight segment.
+ */
+export function generateStraightLinePath(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): { lat: number; lng: number }[] {
+  return [
+    { lat: lat1, lng: lon1 },
+    { lat: lat2, lng: lon2 },
+  ];
+}
+
+/**
+ * Generate a 2D curved (arc) path between two points using a quadratic Bézier.
+ * This is purely for visual styling on flat maps: it bends the straight line
+ * between the two coordinates into a smooth arc.
+ */
+export function generateCurvedBezierPath(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+  segments: number = 50,
+  curveStrength: number = 0.25
+): { lat: number; lng: number }[] {
+  const startX = lon1;
+  const startY = lat1;
+  const endX = lon2;
+  const endY = lat2;
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+
+  const midX = (startX + endX) / 2;
+  const midY = (startY + endY) / 2;
+
+  const length = Math.sqrt(dx * dx + dy * dy) || 1;
+
+  // Perpendicular unit vector to the straight line
+  const nx = -dy / length;
+  const ny = dx / length;
+
+  const offset = length * curveStrength;
+
+  const controlX = midX + nx * offset;
+  const controlY = midY + ny * offset;
+
+  const path: { lat: number; lng: number }[] = [];
+
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const oneMinusT = 1 - t;
+
+    const x =
+      oneMinusT * oneMinusT * startX +
+      2 * oneMinusT * t * controlX +
+      t * t * endX;
+
+    const y =
+      oneMinusT * oneMinusT * startY +
+      2 * oneMinusT * t * controlY +
+      t * t * endY;
+
+    path.push({ lat: y, lng: x });
   }
 
   return path;

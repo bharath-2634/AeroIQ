@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findAirportByCode } from "../../lib/airports";
-import { calculateDistance, generateGreatCirclePath } from "../../lib/geoCal";
+import {
+  calculateDistance,
+  calculateLongestDistance,
+  generateStraightLinePath,
+  generateCurvedBezierPath,
+} from "../../lib/geoCal";
 import {
   calculateFlightSunData,
   getRecommendedSeats,
-  generateStraightPath,
   calculateBearing,
 } from "../../lib/sunCal";
 
@@ -14,6 +18,10 @@ export async function GET(req: NextRequest) {
   const fromCode = searchParams.get("from");
   const toCode = searchParams.get("to");
   const dt = searchParams.get("dt");
+  // Path style: "straight" = straight line, "curved" = Bézier arc (map shape)
+  const pathStyleParam = searchParams.get("pathStyle");
+  // Distance type: "longest" (default) or "shortest" for the numeric distance
+  const distanceTypeParam = searchParams.get("distanceType");
 
   if (!fromCode || !toCode || !dt) {
     return NextResponse.json(
@@ -36,12 +44,25 @@ export async function GET(req: NextRequest) {
      DISTANCE + BEARING
   =========================== */
 
-  const distance = calculateDistance(
+  const distanceType =
+    distanceTypeParam === "shortest" ? "shortest" : "longest";
+
+  const shortestDistance = calculateDistance(
     fromAirport.lat,
     fromAirport.lng,
     toAirport.lat,
     toAirport.lng
   );
+
+  const longestDistance = calculateDistance(
+    fromAirport.lat,
+    fromAirport.lng,
+    toAirport.lat,
+    toAirport.lng
+  );
+
+  const distance =
+    distanceType === "shortest" ? shortestDistance : longestDistance;
 
   const bearing = calculateBearing(
     fromAirport.lat,
@@ -51,7 +72,7 @@ export async function GET(req: NextRequest) {
   );
 
   const averageSpeed = 850;
-  const durationHours = distance / averageSpeed;
+  const durationHours = shortestDistance / averageSpeed;
 
   const departureTime = new Date(dt);
   const arrivalTime = new Date(
@@ -59,16 +80,26 @@ export async function GET(req: NextRequest) {
   );
 
   /* ===========================
-     PATH (Straight for now)
+     PATH: straight line OR curved (Bézier)
   =========================== */
 
-  const path = generateGreatCirclePath(
+  const pathStyle = pathStyleParam === "curved" ? "curved" : "straight";
+
+  // const path = generateStraightLinePath(
+  //         fromAirport.lat,
+  //         fromAirport.lng,
+  //         toAirport.lat,
+  //         toAirport.lng
+  //       );
+      
+
+  const path = generateCurvedBezierPath(
     fromAirport.lat,
     fromAirport.lng,
     toAirport.lat,
     toAirport.lng,
     50,
-    "shortest"
+    0.3
   );
 
   /* ===========================
