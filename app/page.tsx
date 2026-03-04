@@ -2,13 +2,13 @@
 
 import Header from "./components/header";
 import FormSection from "./components/formSection";
-import { useRef, useState } from "react";
+import ScrollFadeIn from "./components/ScrollFadeIn";
+import { useRef } from "react";
 
 export default function Page() {
   const formRef = useRef<HTMLDivElement>(null);
 
   const handleScrollToForm = () => {
-    
     formRef.current?.scrollIntoView({
       behavior: "smooth",
     });
@@ -16,9 +16,13 @@ export default function Page() {
 
   return (
     <div className="w-full flex flex-col items-center justify-center gap-3">
-      <Header onGetStarted={handleScrollToForm}/>
-      <div ref={formRef}>
-        <FormSection />
+      <ScrollFadeIn>
+        <Header onGetStarted={handleScrollToForm} />
+      </ScrollFadeIn>
+      <div ref={formRef} className="w-full flex justify-center">
+        <ScrollFadeIn delayMs={100}>
+          <FormSection />
+        </ScrollFadeIn>
       </div>
     </div>
   );

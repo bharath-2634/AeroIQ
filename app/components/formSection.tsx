@@ -136,7 +136,7 @@ const FormSection = () => {
             router.push(
                 `/visualize?from=${selectedFrom.code}&to=${selectedTo.code}&dt=${departureDateTime}`
             );
-        }, 2000);
+        }, 1100);
     };
 
     const today = new Date().toISOString().split("T")[0];
@@ -267,24 +267,27 @@ const FormSection = () => {
         </form>
       </div>
 
-      {showLoading && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/25 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-6 px-6">
-            <div className="relative w-[20rem] h-24 flex items-center justify-center">
-              <div className="absolute inset-x-4 top-8 h-8 blur-2xl rounded-full" />
-              <div className="relative z-10 flex items-center gap-2 px-6 py-3 animate-plane-fly">
-                <img src={loading_gif.src} alt="loading" className="" />
+      <div className="w-full h-full">
+        {showLoading && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-gradient-to-b from-sky-100 via-sky-200 to-sky-300">
+            <div className="flex flex-col items-center gap-6 px-6">
+              <div className="relative w-full h-full flex items-center justify-center">
+                <div className="absolute inset-x-4 top-8 h-8 blur-2xl rounded-full" />
+                <div className="relative z-10 flex items-center gap-2 px-6 py-3 animate-plane-fly">
+                  <img src={loading_gif.src} alt="loading" className="" />
+                </div>
               </div>
+              <div className="w-[100%] h-1.5 rounded-full overflow-hidden shadow-inner">
+                <div className="h-full w-1/2 rounded-full bg-sky-500 animate-pulse" />
+              </div>
+              <p className="text-sm font-medium text-black">
+                Analyzing your scenic view...
+              </p>
             </div>
-            <div className="w-64 h-1.5 rounded-full overflow-hidden shadow-inner">
-              <div className="h-full w-1/2 rounded-full bg-sky-500 animate-pulse" />
-            </div>
-            <p className="text-sm font-medium text-black">
-              Analyzing your scenic view...
-            </p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      
     </section>
   );
 };
