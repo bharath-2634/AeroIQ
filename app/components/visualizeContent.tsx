@@ -1,6 +1,5 @@
 "use client";
 // export const dynamic = "force-dynamic";
-import dynamic from "next/dynamic";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { useSearchParams,useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -10,11 +9,7 @@ import SeatGuide from "../components/seatGuide";
 import ScenicInfo from "../components/scenicView";
 import FlightRouteCard from "../components/flightRouteCard";
 import ExposureTimelineGraph from "../components/ExposureTimelineGraph";
-import FlightMap3D from "./flight3DMap";
-
-const FlightMap = dynamic(() => import("../components/flightMap"), {
-  ssr: false,
-});
+import FlightMapSwitcher, { MapMode } from "../components/FlightMapSwitcher";
 
 interface FlightResponse {
   from: {
@@ -61,6 +56,9 @@ export default function VisualizePage() {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const dt = searchParams.get("dt");
+  const mapModeParam = searchParams.get("map");
+  const mapMode: MapMode = mapModeParam === "3d" ? "3d" : "2d";
+  const mapPathParam = searchParams.get("mapPath");
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<FlightResponse | null>(null);
@@ -68,10 +66,12 @@ export default function VisualizePage() {
   useEffect(() => {
     if (!from || !to || !dt) return;
 
+    const mapPathQuery = mapPathParam ? `&mapPath=${mapPathParam}` : "";
+
     async function fetchFlightData() {
       try {
         const res = await fetch(
-          `/api/flight?from=${from}&to=${to}&dt=${dt}`
+          `/api/flight?from=${from}&to=${to}&dt=${dt}${mapPathQuery}`
         );
 
         const result = await res.json();
@@ -85,7 +85,7 @@ export default function VisualizePage() {
     }
 
     fetchFlightData();
-  }, [from, to, dt]);
+  }, [from, to, dt, mapPathParam]);
 
   if (loading) {
     return (
@@ -185,7 +185,12 @@ export default function VisualizePage() {
             <div className="w-[80%] flex flex-col items-center justify-center gap-5 mt-[2.3rem] ">
 
                 <div className="flex flex-col items-start justify-start w-full h-125 gap-3 bg-white rounded-2xl shadow-md p-8 font-poppins">
-                    <h2 className="text-[1.2rem] font-medium">Flight Path</h2>
+                    <div className="w-full flex items-center justify-between">
+                      <h2 className="text-[1.2rem] font-medium">Flight Path</h2>
+                      {/* <p className="text-xs text-gray-500">
+                        {mapMode === "3d" ? "3D Globe" : "2D Map"}
+                      </p> */}
+                    </div>
                     <div className="w-full flex items-center justify-start gap-10">
 
                         <div className="flex items-center gap-2">
@@ -202,19 +207,20 @@ export default function VisualizePage() {
                 
                 
                     {data && (
-                        <FlightMap
-                        from={{
-                            lat: data.from.lat,
-                            lng: data.from.lng,
-                            city: data.from.city,
-                        }}
-                        to={{
-                            lat: data.to.lat,
-                            lng: data.to.lng,
-                            city: data.to.city,
-                        }}
-                        path={data.path}
-                        sunTrack={sunTrack}
+                        <FlightMapSwitcher
+                          mode={"2d"}
+                          from={{
+                              lat: data.from.lat,
+                              lng: data.from.lng,
+                              city: data.from.city,
+                          }}
+                          to={{
+                              lat: data.to.lat,
+                              lng: data.to.lng,
+                              city: data.to.city,
+                          }}
+                          path={data.path}
+                          sunTrack={sunTrack}
                         />
                     )}
                 </div>

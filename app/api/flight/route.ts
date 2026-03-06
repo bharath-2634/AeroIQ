@@ -3,6 +3,7 @@ import { findAirportByCode } from "../../lib/airports";
 import {
   calculateDistance,
   calculateLongestDistance,
+  generateGreatCirclePath,
   generateStraightLinePath,
   generateCurvedBezierPath,
 } from "../../lib/geoCal";
@@ -22,6 +23,8 @@ export async function GET(req: NextRequest) {
   const pathStyleParam = searchParams.get("pathStyle");
   // Distance type: "longest" (default) or "shortest" for the numeric distance
   const distanceTypeParam = searchParams.get("distanceType");
+  // Map path: "shortest" = great-circle short arc, "longest" = great-circle long arc
+  const mapPathParam = searchParams.get("mapPath");
 
   if (!fromCode || !toCode || !dt) {
     return NextResponse.json(
@@ -80,15 +83,19 @@ export async function GET(req: NextRequest) {
   );
 
   /* ===========================
-     PATH: straight line 
+     PATH: shortest (great-circle) or longest (great-circle)
   =========================== */
 
+  // const mapPath = mapPathParam === "longest" ? "longest" : "shortest";
+
+  // 
+  
   const path = generateStraightLinePath(
-          fromAirport.lat,
-          fromAirport.lng,
-          toAirport.lat,
-          toAirport.lng
-        );
+    fromAirport.lat,
+    fromAirport.lng,
+    toAirport.lat,
+    toAirport.lng
+  );
       
 
 
